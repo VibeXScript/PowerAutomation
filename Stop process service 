@@ -1,0 +1,43 @@
+param (
+    [string]$applicationName
+)
+
+# Function to stop related processes
+function Stop-RelatedProcesses {
+    param (
+        [string]$appName
+    )
+
+    $processes = Get-Process | Where-Object {$_.MainModule.FileName -like "*$appName*"}
+    if ($processes) {
+        foreach ($process in $processes) {
+            Write-Host "Stopping process: $($process.Name) with PID $($process.Id)"
+            Stop-Process -Id $process.Id -Force
+        }
+    }
+}
+
+# Function to stop related services
+function Stop-RelatedServices {
+    param (
+        [string]$appName
+    )
+
+    $services = Get-WmiObject -Class Win32_Service | Where-Object {$_.PathName -like "*$appName*"}
+    if ($services) {
+        foreach ($service in $services) {
+            Write-Host "Stopping service: $($service.DisplayName)"
+            Stop-Service -Name $service.Name -Force
+        }
+    }
+}
+
+# Stop related processes and services
+Stop-RelatedProcesses -appName $applicationName
+Stop-RelatedServices -appName $applicationName
+
+# Uninstall the application
+Write-Host "Uninstalling $applicationName..."
+# Add your uninstallation command here
+
+Write-Host "$applicationName has been uninstalled successfully."
